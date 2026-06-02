@@ -1,0 +1,33 @@
+:root { --bg: #1f232b; --panel: #2a2f3a; --text: #f4f6fb; --muted: #aab2c0; --border: #454b58; --accent: #66d9a2; --danger: #ff8b8b; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+.panel { padding: 18px; }
+header { margin-bottom: 18px; }
+h1 { margin: 0 0 4px; font-size: 19px; font-weight: 650; }
+p { margin: 0; color: var(--muted); }
+.status-card, .field-group, .log-section { border: 1px solid var(--border); background: var(--panel); border-radius: 6px; padding: 12px; margin-bottom: 12px; }
+.label, label { display: block; margin-bottom: 7px; color: var(--muted); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; }
+.value { font-size: 15px; font-weight: 650; word-break: break-word; }
+.subvalue { margin-top: 3px; color: var(--muted); }
+.path-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; position: relative; }
+input { width: 100%; border: 1px solid var(--border); border-radius: 5px; padding: 8px; color: var(--text); background: #181b21; }
+button { border: 1px solid var(--border); border-radius: 5px; padding: 8px 10px; color: var(--text); background: #353b47; cursor: pointer; }
+button.primary { border-color: #2f9d67; background: #258457; }
+button:disabled { cursor: default; opacity: .55; }
+.actions { display: flex; gap: 8px; margin-bottom: 12px; }
+#log { min-height: 120px; margin: 0; padding-left: 20px; color: var(--muted); }
+#log li { margin-bottom: 5px; }
+#log li.error { color: var(--danger); }
+#log li.ok { color: var(--accent); }
+
+.icon-button { min-width: 34px; padding: 8px 9px; }
+.recent-menu { position: absolute; z-index: 20; right: 86px; top: calc(100% + 6px); width: min(420px, 100%); max-height: 180px; overflow: auto; border: 1px solid var(--border); border-radius: 6px; background: #222733; box-shadow: 0 12px 30px rgba(0,0,0,.28); }
+.recent-menu button { display: block; width: 100%; border: 0; border-radius: 0; padding: 8px 10px; text-align: left; color: var(--text); background: transparent; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.recent-menu button:hover { background: #343b49; }
+
+.checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; color: var(--text); text-transform: none; letter-spacing: 0; font-size: 13px; }
+.checkbox-row input { width: auto; margin: 0; }
+.compact-fields { display: grid; gap: 7px; }
+.compact-fields label { margin: 5px 0 0; }
+textarea { width: 100%; min-height: 86px; resize: vertical; border: 1px solid var(--border); border-radius: 5px; padding: 8px; color: var(--text); background: #181b21; font: inherit; }
+.ai-polish input[type="password"] { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }

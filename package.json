@@ -1,0 +1,11 @@
+{
+  "name": "premiere-marker-review-exporter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Premiere Pro 2022 CEP panel for exporting marker review reports.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "check:manifest": "node scripts/check-manifest.mjs"
+  }
+}

@@ -1,0 +1,69 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Marker Review Export</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <main class="panel">
+    <header>
+      <h1>Marker Review Export</h1>
+      <p>Premiere Pro 2022 sequence marker report</p>
+    </header>
+    <section class="status-card">
+      <div class="label">Current sequence</div>
+      <div id="sequenceName" class="value">No active sequence</div>
+      <div id="markerCount" class="subvalue">0 markers</div>
+    </section>
+    <section class="field-group">
+      <label for="outputPath">Output folder</label>
+      <div class="path-row">
+        <input id="outputPath" type="text" placeholder="Choose an output parent folder" spellcheck="false">
+        <button id="recentOutput" type="button" class="icon-button" title="Recent output folders">⌄</button>
+        <button id="chooseOutput" type="button">Choose</button>
+        <div id="recentOutputMenu" class="recent-menu" hidden></div>
+      </div>
+    </section>
+    <section class="field-group">
+      <label for="masterVideoPath">Fallback master video</label>
+      <div class="path-row">
+        <input id="masterVideoPath" type="text" placeholder="Required only when AME 2022 is missing" spellcheck="false">
+        <button id="recentMaster" type="button" class="icon-button" title="Recent master videos">⌄</button>
+        <button id="chooseMaster" type="button">Choose</button>
+        <div id="recentMasterMenu" class="recent-menu" hidden></div>
+      </div>
+    </section>
+    <section class="field-group ai-polish">
+      <label class="checkbox-row" for="aiEnabled">
+        <input id="aiEnabled" type="checkbox">
+        <span>AI Polish comments</span>
+      </label>
+      <div class="compact-fields">
+        <label for="aiBaseUrl">Base URL</label>
+        <input id="aiBaseUrl" type="text" spellcheck="false">
+        <label for="aiModel">Model</label>
+        <input id="aiModel" type="text" placeholder="gpt-4o-mini" spellcheck="false">
+        <label for="aiApiKey">API Key</label>
+        <input id="aiApiKey" type="password" placeholder="Stored locally in this panel" spellcheck="false">
+        <label for="aiPrompt">Prompt</label>
+        <textarea id="aiPrompt" rows="4" spellcheck="false"></textarea>
+      </div>
+    </section>
+    <section class="actions">
+      <button id="refresh" type="button">Refresh Markers</button>
+      <button id="export" type="button" class="primary">Export Report</button>
+    </section>
+    <section class="log-section">
+      <div class="label">Progress</div>
+      <ol id="log"></ol>
+    </section>
+  </main>
+  <script src="js/CSInterface.js"></script>
+  <script src="js/report.js"></script>
+  <script src="js/ffmpeg.js"></script>
+  <script src="js/exportPath.js"></script>
+  <script src="js/aiPolish.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
