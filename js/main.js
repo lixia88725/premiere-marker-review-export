@@ -42,7 +42,8 @@ const extensionRoot = decodeURI(cs.getSystemPath(SystemPath.EXTENSION)).replace(
 const videoPresetPath = extensionRoot + '/presets/review-720p.epr';
 const framePresetPath = extensionRoot + '/presets/review-frame.epr';
 let pendingPolishPreview = null;
-const startupRefreshDelays = [0, 800, 2000, 5000, 10000];
+const STARTUP_REFRESH_INTERVAL_MS = 500;
+const STARTUP_REFRESH_TIMEOUT_MS = 12000;
 
 el.chooseOutput.addEventListener('click', chooseOutputFolder);
 el.chooseMaster.addEventListener('click', chooseMasterVideo);
@@ -67,13 +68,13 @@ async function loadHostScript() {
 }
 
 async function runStartupRefresh() {
-  for (let index = 0; index < startupRefreshDelays.length; index += 1) {
-    const delayMs = startupRefreshDelays[index];
-    const isLastAttempt = index === startupRefreshDelays.length - 1;
-    if (delayMs > 0) await delay(delayMs);
-    await refreshSummary({ diagnostics: isLastAttempt });
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < STARTUP_REFRESH_TIMEOUT_MS) {
+    await refreshSummary({ diagnostics: false });
     if (normalizeCepFilePath(el.outputPath.value)) return;
+    await delay(STARTUP_REFRESH_INTERVAL_MS);
   }
+  await refreshSummary({ diagnostics: true });
 }
 
 async function refreshDefaultOutputFolderWhenEmpty() {

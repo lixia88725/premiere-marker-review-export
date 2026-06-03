@@ -115,12 +115,16 @@ describe('CEP package structure', () => {
 
     assert.match(main, /loadHostScript\(\)\.then\(runStartupRefresh\)/);
     assert.match(main, /async function runStartupRefresh/);
-    assert.match(main, /const startupRefreshDelays = \[0, 800, 2000, 5000, 10000\]/);
+    assert.match(main, /const STARTUP_REFRESH_INTERVAL_MS = 500/);
+    assert.match(main, /const STARTUP_REFRESH_TIMEOUT_MS = 12000/);
+    assert.match(main, /Date\.now\(\) - startedAt < STARTUP_REFRESH_TIMEOUT_MS/);
     assert.match(main, /window\.addEventListener\('focus', refreshDefaultOutputFolderWhenEmpty\)/);
     assert.match(main, /document\.addEventListener\('visibilitychange', refreshDefaultOutputFolderWhenEmpty\)/);
     assert.match(main, /async function refreshDefaultOutputFolderWhenEmpty/);
     assert.match(main, /if \(document\.hidden\) return/);
-    assert.match(main, /await refreshSummary\(\{ diagnostics: isLastAttempt \}\)/);
+    assert.match(main, /await refreshSummary\(\{ diagnostics: false \}\)/);
+    assert.match(main, /await delay\(STARTUP_REFRESH_INTERVAL_MS\)/);
+    assert.match(main, /await refreshSummary\(\{ diagnostics: true \}\)/);
     assert.match(main, /if \(normalizeCepFilePath\(el\.outputPath\.value\)\) return/);
     assert.match(main, /async function refreshSummary\(options\)/);
     assert.match(main, /const diagnostics = options && options\.diagnostics !== false/);
