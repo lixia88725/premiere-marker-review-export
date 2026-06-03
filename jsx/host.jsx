@@ -125,6 +125,8 @@ function queueMarkerExport(seq, marker, outputPath, presetPath) {
 function projectNameOrSequence(seq) {
   try {
     if (app.project && app.project.path) {
+      var projectFile = new File(app.project.path);
+      if (projectFile && projectFile.name) return projectFile.name;
       var parts = String(app.project.path).split('/');
       return parts[parts.length - 1] || seq.name;
     }
@@ -135,6 +137,8 @@ function projectNameOrSequence(seq) {
 function projectFolderOrEmpty() {
   try {
     if (app.project && app.project.path) {
+      var projectFile = new File(app.project.path);
+      if (projectFile && projectFile.parent && projectFile.parent.fsName) return projectFile.parent.fsName;
       var parts = String(app.project.path).split('/');
       parts.pop();
       return parts.join('/');

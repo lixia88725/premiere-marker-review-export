@@ -83,7 +83,10 @@ async function refreshSummary() {
 function applyDefaultOutputFolder(projectFolder) {
   if (normalizeCepFilePath(el.outputPath.value)) return;
   const normalized = normalizeCepFilePath(projectFolder);
-  if (normalized) el.outputPath.value = normalized;
+  if (normalized) {
+    el.outputPath.value = normalized;
+    log('Default output folder: ' + normalized, 'ok');
+  }
 }
 
 function chooseMasterVideo() {
