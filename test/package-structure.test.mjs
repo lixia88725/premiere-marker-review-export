@@ -123,4 +123,22 @@ describe('CEP package structure', () => {
     assert.match(main, /const diagnostics = options && options\.diagnostics !== false/);
     assert.match(main, /if \(diagnostics\) logProjectPathDiagnostics\(summary\)/);
   });
+
+  it('restores the active sequence In and Out points after queueing media', () => {
+    const host = read('jsx/host.jsx');
+
+    assert.match(host, /function captureSequenceInOut/);
+    assert.match(host, /function restoreSequenceInOut/);
+    assert.match(host, /previousInOut = captureSequenceInOut\(seq\)/);
+    assert.match(host, /finally \{\s*restoreSequenceInOut\(seq, previousInOut\);/);
+  });
+
+  it('sets a timeout for AI polish API requests', () => {
+    const ai = read('js/aiPolish.js');
+
+    assert.match(ai, /timeoutMs/);
+    assert.match(ai, /req\.setTimeout\(timeoutMs/);
+    assert.match(ai, /AI polish API timed out/);
+    assert.match(ai, /req\.destroy\(/);
+  });
 });

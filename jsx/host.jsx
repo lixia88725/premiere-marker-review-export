@@ -69,8 +69,11 @@ function replaceMarkerComments(replacementsJson) {
 }
 
 function exportMarkerMedia(outputRoot, videoPresetPath, framePresetPath, markersJson) {
+  var seq = null;
+  var previousInOut = null;
   try {
-    var seq = activeSequenceOrThrow();
+    seq = activeSequenceOrThrow();
+    previousInOut = captureSequenceInOut(seq);
     var markers = JSON.parse(markersJson);
     var items = [];
     app.encoder.launchEncoder();
@@ -85,12 +88,17 @@ function exportMarkerMedia(outputRoot, videoPresetPath, framePresetPath, markers
     return stringifyResult({ ok: true, items: items });
   } catch (error) {
     return stringifyResult({ ok: false, error: String(error) });
+  } finally {
+    restoreSequenceInOut(seq, previousInOut);
   }
 }
 
 function exportSingleMarkerMedia(outputRoot, videoPresetPath, framePresetPath, markerJson) {
+  var seq = null;
+  var previousInOut = null;
   try {
-    var seq = activeSequenceOrThrow();
+    seq = activeSequenceOrThrow();
+    previousInOut = captureSequenceInOut(seq);
     var marker = JSON.parse(markerJson);
     app.encoder.launchEncoder();
     var outputPath = outputRoot + '/assets/' + marker.assetFileName;
@@ -99,6 +107,8 @@ function exportSingleMarkerMedia(outputRoot, videoPresetPath, framePresetPath, m
     return stringifyResult({ ok: true, item: { ok: jobId !== '0' && jobId !== 0 && jobId !== null, assetFileName: marker.assetFileName, jobId: String(jobId), message: marker.assetFileName + (jobId ? ' queued in AME.' : ' failed to queue.') } });
   } catch (error) {
     return stringifyResult({ ok: false, error: String(error) });
+  } finally {
+    restoreSequenceInOut(seq, previousInOut);
   }
 }
 
@@ -120,6 +130,31 @@ function queueMarkerExport(seq, marker, outputPath, presetPath) {
   if (app.encoder.encodeSequence) return app.encoder.encodeSequence(seq, outputPath, presetPath, 1, 1);
   if (app.encoder.encodeActiveSequence) return app.encoder.encodeActiveSequence(outputPath, presetPath, 1, 1);
   throw new Error('Premiere encoder API is not available.');
+}
+
+function captureSequenceInOut(seq) {
+  if (!seq) return null;
+  try {
+    if (seq.getInPointAsTime && seq.getOutPointAsTime) {
+      return { ok: true, inPoint: seq.getInPointAsTime(), outPoint: seq.getOutPointAsTime() };
+    }
+  } catch (_error) {}
+  return null;
+}
+
+function restoreSequenceInOut(seq, previousInOut) {
+  if (!seq || !previousInOut || !previousInOut.ok) return;
+  try {
+    seq.setInPoint(secondsFromTime(previousInOut.inPoint));
+    seq.setOutPoint(secondsFromTime(previousInOut.outPoint));
+  } catch (_error) {}
+}
+
+function secondsFromTime(time) {
+  if (!time) return 0;
+  if (time.seconds !== undefined) return Number(time.seconds);
+  if (time.ticks !== undefined) return Number(time.ticks) / REVIEW_EXPORT_TICKS_PER_SECOND;
+  return Number(time) || 0;
 }
 
 function projectNameOrSequence(seq) {

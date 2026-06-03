@@ -1,6 +1,7 @@
 export const AI_SETTINGS_KEY = 'premiereReviewExport.aiSettings';
 export const DEFAULT_AI_BASE_URL = 'https://api.openai.com/v1/chat/completions';
 export const DEFAULT_AI_PROMPT = '请帮我润色这些剪辑反馈：修正语音输入造成的错别字、错误断句和不合适的语气，在不改变原意的前提下，让表达更清晰、准确、易懂。';
+export const DEFAULT_AI_TIMEOUT_MS = 60000;
 
 export function defaultAiSettings() {
   return {
@@ -113,6 +114,7 @@ export function buildPolishRequest(markers, settings) {
 
   return {
     url: normalizedSettings.baseUrl,
+    timeoutMs: DEFAULT_AI_TIMEOUT_MS,
     headers: {
       Authorization: 'Bearer ' + normalizedSettings.apiKey,
       'Content-Type': 'application/json'
@@ -168,6 +170,7 @@ function requestJsonWithNode(request) {
     const parsedUrl = new urlModule.URL(request.url);
     const transport = parsedUrl.protocol === 'http:' ? require('http') : require('https');
     const bodyText = JSON.stringify(request.body);
+    const timeoutMs = Number(request.timeoutMs) || DEFAULT_AI_TIMEOUT_MS;
     const req = transport.request({
       method: 'POST',
       hostname: parsedUrl.hostname,
@@ -182,6 +185,9 @@ function requestJsonWithNode(request) {
         if (res.statusCode >= 200 && res.statusCode < 300) resolve(data);
         else reject(new Error('AI polish API returned HTTP ' + res.statusCode + ': ' + data));
       });
+    });
+    req.setTimeout(timeoutMs, () => {
+      req.destroy(new Error('AI polish API timed out after ' + timeoutMs + 'ms.'));
     });
     req.on('error', reject);
     req.write(bodyText);

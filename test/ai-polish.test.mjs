@@ -56,6 +56,7 @@ describe('buildPolishRequest', () => {
     assert.equal(request.url, DEFAULT_AI_BASE_URL);
     assert.equal(request.headers.Authorization, 'Bearer sk-test');
     assert.equal(request.body.model, 'gpt-test');
+    assert.equal(request.timeoutMs, 60000);
     assert.match(request.body.messages[0].content, /不改变原意/);
     const payload = JSON.parse(request.body.messages[1].content);
     assert.deepEqual(payload.items.map((item) => item.index), [1, 3]);
