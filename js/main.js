@@ -42,8 +42,6 @@ const extensionRoot = decodeURI(cs.getSystemPath(SystemPath.EXTENSION)).replace(
 const videoPresetPath = extensionRoot + '/presets/review-720p.epr';
 const framePresetPath = extensionRoot + '/presets/review-frame.epr';
 let pendingPolishPreview = null;
-const STARTUP_REFRESH_INTERVAL_MS = 500;
-const STARTUP_REFRESH_TIMEOUT_MS = 12000;
 
 el.chooseOutput.addEventListener('click', chooseOutputFolder);
 el.chooseMaster.addEventListener('click', chooseMasterVideo);
@@ -55,32 +53,14 @@ el.export.addEventListener('click', exportReport);
 el.applyPolishPreview.addEventListener('click', applyPolishPreview);
 el.cancelPolishPreview.addEventListener('click', cancelPolishPreview);
 document.addEventListener('click', closeRecentMenusOnOutsideClick);
-window.addEventListener('focus', refreshDefaultOutputFolderWhenEmpty);
-document.addEventListener('visibilitychange', refreshDefaultOutputFolderWhenEmpty);
 applyAiSettingsToUi(loadAiSettings());
 bindAiSettingsAutosave();
-loadHostScript().then(runStartupRefresh).catch(function (error) { log(error.message, 'error'); });
+loadHostScript().then(refreshSummary).catch(function (error) { log(error.message, 'error'); });
 
 async function loadHostScript() {
   const jsxPath = extensionRoot + '/jsx/host.jsx';
   const result = await evalScript('$.evalFile(' + quoteForExtendScript(jsxPath) + ')');
   if (result && result.ok === false) throw new Error(result.error || 'Failed to load host script.');
-}
-
-async function runStartupRefresh() {
-  const startedAt = Date.now();
-  while (Date.now() - startedAt < STARTUP_REFRESH_TIMEOUT_MS) {
-    await refreshSummary({ diagnostics: false });
-    if (normalizeCepFilePath(el.outputPath.value)) return;
-    await delay(STARTUP_REFRESH_INTERVAL_MS);
-  }
-  await refreshSummary({ diagnostics: true });
-}
-
-async function refreshDefaultOutputFolderWhenEmpty() {
-  if (document.hidden) return;
-  if (normalizeCepFilePath(el.outputPath.value)) return;
-  await refreshSummary({ diagnostics: false });
 }
 
 async function refreshSummary(options) {

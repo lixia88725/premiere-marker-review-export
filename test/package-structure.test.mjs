@@ -110,22 +110,15 @@ describe('CEP package structure', () => {
     assert.match(main, /if \(normalizeCepFilePath\(el\.outputPath\.value\)\) return/);
   });
 
-  it('retries startup refresh so default output folder can populate after Premiere is ready', () => {
+  it('keeps default output folder on manual refresh without startup retry polling', () => {
     const main = read('js/main.js');
 
-    assert.match(main, /loadHostScript\(\)\.then\(runStartupRefresh\)/);
-    assert.match(main, /async function runStartupRefresh/);
-    assert.match(main, /const STARTUP_REFRESH_INTERVAL_MS = 500/);
-    assert.match(main, /const STARTUP_REFRESH_TIMEOUT_MS = 12000/);
-    assert.match(main, /Date\.now\(\) - startedAt < STARTUP_REFRESH_TIMEOUT_MS/);
-    assert.match(main, /window\.addEventListener\('focus', refreshDefaultOutputFolderWhenEmpty\)/);
-    assert.match(main, /document\.addEventListener\('visibilitychange', refreshDefaultOutputFolderWhenEmpty\)/);
-    assert.match(main, /async function refreshDefaultOutputFolderWhenEmpty/);
-    assert.match(main, /if \(document\.hidden\) return/);
-    assert.match(main, /await refreshSummary\(\{ diagnostics: false \}\)/);
-    assert.match(main, /await delay\(STARTUP_REFRESH_INTERVAL_MS\)/);
-    assert.match(main, /await refreshSummary\(\{ diagnostics: true \}\)/);
-    assert.match(main, /if \(normalizeCepFilePath\(el\.outputPath\.value\)\) return/);
+    assert.match(main, /loadHostScript\(\)\.then\(refreshSummary\)/);
+    assert.match(main, /el\.refresh\.addEventListener\('click', refreshSummary\)/);
+    assert.doesNotMatch(main, /runStartupRefresh/);
+    assert.doesNotMatch(main, /STARTUP_REFRESH_INTERVAL_MS/);
+    assert.doesNotMatch(main, /refreshDefaultOutputFolderWhenEmpty/);
+    assert.doesNotMatch(main, /window\.addEventListener\('focus'/);
     assert.match(main, /async function refreshSummary\(options\)/);
     assert.match(main, /const diagnostics = options && options\.diagnostics !== false/);
     assert.match(main, /if \(diagnostics\) logProjectPathDiagnostics\(summary\)/);
