@@ -109,4 +109,17 @@ describe('CEP package structure', () => {
     assert.match(main, /function applyDefaultOutputFolder/);
     assert.match(main, /if \(normalizeCepFilePath\(el\.outputPath\.value\)\) return/);
   });
+
+  it('retries startup refresh so default output folder can populate after Premiere is ready', () => {
+    const main = read('js/main.js');
+
+    assert.match(main, /loadHostScript\(\)\.then\(runStartupRefresh\)/);
+    assert.match(main, /async function runStartupRefresh/);
+    assert.match(main, /const startupRefreshDelays = \[0, 800, 2000\]/);
+    assert.match(main, /await refreshSummary\(\{ diagnostics: isLastAttempt \}\)/);
+    assert.match(main, /if \(normalizeCepFilePath\(el\.outputPath\.value\)\) return/);
+    assert.match(main, /async function refreshSummary\(options\)/);
+    assert.match(main, /const diagnostics = options && options\.diagnostics !== false/);
+    assert.match(main, /if \(diagnostics\) logProjectPathDiagnostics\(summary\)/);
+  });
 });

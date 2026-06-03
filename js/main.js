@@ -42,6 +42,7 @@ const extensionRoot = decodeURI(cs.getSystemPath(SystemPath.EXTENSION)).replace(
 const videoPresetPath = extensionRoot + '/presets/review-720p.epr';
 const framePresetPath = extensionRoot + '/presets/review-frame.epr';
 let pendingPolishPreview = null;
+const startupRefreshDelays = [0, 800, 2000];
 
 el.chooseOutput.addEventListener('click', chooseOutputFolder);
 el.chooseMaster.addEventListener('click', chooseMasterVideo);
@@ -55,7 +56,7 @@ el.cancelPolishPreview.addEventListener('click', cancelPolishPreview);
 document.addEventListener('click', closeRecentMenusOnOutsideClick);
 applyAiSettingsToUi(loadAiSettings());
 bindAiSettingsAutosave();
-loadHostScript().then(refreshSummary).catch(function (error) { log(error.message, 'error'); });
+loadHostScript().then(runStartupRefresh).catch(function (error) { log(error.message, 'error'); });
 
 async function loadHostScript() {
   const jsxPath = extensionRoot + '/jsx/host.jsx';
@@ -63,7 +64,18 @@ async function loadHostScript() {
   if (result && result.ok === false) throw new Error(result.error || 'Failed to load host script.');
 }
 
-async function refreshSummary() {
+async function runStartupRefresh() {
+  for (let index = 0; index < startupRefreshDelays.length; index += 1) {
+    const delayMs = startupRefreshDelays[index];
+    const isLastAttempt = index === startupRefreshDelays.length - 1;
+    if (delayMs > 0) await delay(delayMs);
+    await refreshSummary({ diagnostics: isLastAttempt });
+    if (normalizeCepFilePath(el.outputPath.value)) return;
+  }
+}
+
+async function refreshSummary(options) {
+  const diagnostics = options && options.diagnostics !== false;
   setBusy(true);
   try {
     const summary = await evalScript('getSequenceSummary()');
@@ -71,7 +83,7 @@ async function refreshSummary() {
     el.sequenceName.textContent = summary.sequenceName;
     el.markerCount.textContent = summary.markerCount + (summary.markerCount === 1 ? ' marker' : ' markers');
     applyDefaultOutputFolder(summary.projectFolder);
-    logProjectPathDiagnostics(summary);
+    if (diagnostics) logProjectPathDiagnostics(summary);
   } catch (error) {
     el.sequenceName.textContent = 'No active sequence';
     el.markerCount.textContent = '0 markers';
