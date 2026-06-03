@@ -56,4 +56,19 @@ describe('CEP package structure', () => {
     assert.match(main, /saveAiSettings/);
     assert.match(main, /polishMarkerComments/);
   });
+
+  it('contains AI marker writeback controls and host entry point', () => {
+    const html = read('index.html');
+    const main = read('js/main.js');
+    const host = read('jsx/host.jsx');
+
+    assert.match(html, /id="polishMarkers"/);
+    assert.match(html, /Polish Premiere Markers/);
+    assert.match(main, /polishPremiereMarkers/);
+    assert.match(main, /buildMarkerCommentReplacements/);
+    assert.match(main, /marker-polish-backup-/);
+    assert.match(main, /aiEnabled\.checked = false/);
+    assert.match(host, /function replaceMarkerComments/);
+    assert.match(host, /marker\.comments = replacement\.polishedComment/);
+  });
 });

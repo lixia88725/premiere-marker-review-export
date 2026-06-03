@@ -3,6 +3,8 @@ import { describe, it } from 'node:test';
 import {
   DEFAULT_AI_BASE_URL,
   DEFAULT_AI_PROMPT,
+  buildMarkerCommentReplacements,
+  buildMarkerPolishBackup,
   buildPolishRequest,
   loadAiSettings,
   parsePolishResponse,
@@ -103,5 +105,56 @@ describe('polishMarkerComments', () => {
 
     assert.deepEqual(result, markers);
     assert.ok(errorMessage);
+  });
+});
+
+describe('buildMarkerCommentReplacements', () => {
+  it('builds safe replacements only for changed non-empty comments', () => {
+    const original = [
+      { index: 1, comment: '这礼速度有点太快了', startTicks: '10', durationTicks: '2' },
+      { index: 2, comment: '', startTicks: '20', durationTicks: '0' },
+      { index: 3, comment: '保持原样', startTicks: '30', durationTicks: '4' }
+    ];
+    const polished = [
+      { index: 1, comment: '这里速度有点太快了。', startTicks: '10', durationTicks: '2' },
+      { index: 2, comment: '不应该写回空原文', startTicks: '20', durationTicks: '0' },
+      { index: 3, comment: '保持原样', startTicks: '30', durationTicks: '4' }
+    ];
+
+    assert.deepEqual(buildMarkerCommentReplacements(original, polished), [{
+      index: 1,
+      startTicks: '10',
+      durationTicks: '2',
+      originalComment: '这礼速度有点太快了',
+      polishedComment: '这里速度有点太快了。'
+    }]);
+  });
+});
+
+describe('buildMarkerPolishBackup', () => {
+  it('records sequence and replacement details before writeback', () => {
+    const backup = buildMarkerPolishBackup({
+      sequenceName: 'Seq A',
+      projectName: 'Project.prproj',
+      generatedAt: '2026-05-29T12:00:00.000Z',
+      replacements: [{
+        index: 1,
+        startTicks: '10',
+        durationTicks: '2',
+        originalComment: '原文',
+        polishedComment: '润色'
+      }]
+    });
+
+    assert.equal(backup.sequenceName, 'Seq A');
+    assert.equal(backup.projectName, 'Project.prproj');
+    assert.equal(backup.generatedAt, '2026-05-29T12:00:00.000Z');
+    assert.deepEqual(backup.replacements[0], {
+      index: 1,
+      startTicks: '10',
+      durationTicks: '2',
+      originalComment: '原文',
+      polishedComment: '润色'
+    });
   });
 });

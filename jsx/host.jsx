@@ -31,6 +31,43 @@ function collectMarkers() {
   }
 }
 
+function replaceMarkerComments(replacementsJson) {
+  try {
+    var seq = activeSequenceOrThrow();
+    var replacements = JSON.parse(replacementsJson);
+    var updatedCount = 0;
+    var skippedCount = 0;
+    var messages = [];
+    var marker = seq.markers.getFirstMarker();
+    var index = 1;
+
+    while (marker) {
+      var replacement = replacementForIndex(replacements, index);
+      if (replacement) {
+        var startTicks = String(ticksFromTime(marker.start));
+        var endTicks = String(ticksFromTime(marker.end || marker.start));
+        var durationTicks = String(Math.max(0, Number(endTicks) - Number(startTicks)));
+        var currentComment = String(marker.comments || '');
+
+        if (startTicks !== String(replacement.startTicks) || durationTicks !== String(replacement.durationTicks) || currentComment !== String(replacement.originalComment || '')) {
+          skippedCount += 1;
+          messages.push('Skipped marker ' + index + ': marker changed after AI polish.');
+        } else {
+          marker.comments = replacement.polishedComment;
+          updatedCount += 1;
+          messages.push('Updated marker ' + index + '.');
+        }
+      }
+      index += 1;
+      marker = seq.markers.getNextMarker(marker);
+    }
+
+    return stringifyResult({ ok: true, updatedCount: updatedCount, skippedCount: skippedCount, messages: messages });
+  } catch (error) {
+    return stringifyResult({ ok: false, error: String(error) });
+  }
+}
+
 function exportMarkerMedia(outputRoot, videoPresetPath, framePresetPath, markersJson) {
   try {
     var seq = activeSequenceOrThrow();
@@ -105,6 +142,13 @@ function countSequenceMarkers(seq) {
   var marker = seq.markers.getFirstMarker();
   while (marker) { count += 1; marker = seq.markers.getNextMarker(marker); }
   return count;
+}
+
+function replacementForIndex(replacements, index) {
+  for (var i = 0; i < replacements.length; i += 1) {
+    if (Number(replacements[i].index) === index) return replacements[i];
+  }
+  return null;
 }
 
 function ticksFromTime(time) {

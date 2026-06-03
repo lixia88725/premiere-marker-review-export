@@ -8,6 +8,8 @@ const reviewDateStamp = window.ReviewExportPath.reviewDateStamp;
 const loadAiSettings = window.ReviewAiPolish.loadAiSettings;
 const saveAiSettings = window.ReviewAiPolish.saveAiSettings;
 const polishMarkerComments = window.ReviewAiPolish.polishMarkerComments;
+const buildMarkerCommentReplacements = window.ReviewAiPolish.buildMarkerCommentReplacements;
+const buildMarkerPolishBackup = window.ReviewAiPolish.buildMarkerPolishBackup;
 const cs = new CSInterface();
 const RECENT_OUTPUTS_KEY = 'premiereReviewExport.recentOutputs';
 const RECENT_MASTERS_KEY = 'premiereReviewExport.recentMasters';
@@ -28,6 +30,7 @@ const el = {
   aiApiKey: document.getElementById('aiApiKey'),
   aiPrompt: document.getElementById('aiPrompt'),
   refresh: document.getElementById('refresh'),
+  polishMarkers: document.getElementById('polishMarkers'),
   export: document.getElementById('export'),
   log: document.getElementById('log')
 };
@@ -40,6 +43,7 @@ el.chooseMaster.addEventListener('click', chooseMasterVideo);
 el.recentOutput.addEventListener('click', function () { toggleRecentMenu(el.recentOutputMenu, RECENT_OUTPUTS_KEY, el.outputPath); });
 el.recentMaster.addEventListener('click', function () { toggleRecentMenu(el.recentMasterMenu, RECENT_MASTERS_KEY, el.masterVideoPath); });
 el.refresh.addEventListener('click', refreshSummary);
+el.polishMarkers.addEventListener('click', polishPremiereMarkers);
 el.export.addEventListener('click', exportReport);
 document.addEventListener('click', closeRecentMenusOnOutsideClick);
 applyAiSettingsToUi(loadAiSettings());
@@ -135,6 +139,73 @@ async function exportReport() {
       if (!batchResult.ok) throw new Error(batchResult.error);
       log('Started AME batch for ' + queuedCount + ' queued media assets.', 'ok');
     }
+  } catch (error) {
+    log(error.message, 'error');
+  } finally {
+    setBusy(false);
+    refreshSummary();
+  }
+}
+
+async function polishPremiereMarkers() {
+  clearLog();
+  const outputParent = normalizeCepFilePath(el.outputPath.value);
+  if (!outputParent) { log('Choose an output parent folder first so the original marker comments can be backed up.', 'error'); return; }
+
+  const settings = Object.assign({}, getAiSettingsFromUi(), { enabled: true });
+  saveAiSettings(settings);
+  if (!settings.baseUrl || !settings.model || !settings.apiKey) {
+    log('Fill in AI Base URL, Model, and API Key before polishing Premiere markers.', 'error');
+    return;
+  }
+
+  if (!window.confirm('This will replace the current Premiere sequence marker comments with AI-polished text. A backup JSON will be written to the output folder first. Save your Premiere project before continuing.')) return;
+
+  setBusy(true);
+  try {
+    log('Reading current sequence markers...');
+    const raw = await evalScript('collectMarkers()');
+    if (!raw.ok) throw new Error(raw.error);
+    const markers = normalizeMarkers(raw.markers);
+    const commentCount = markers.filter(function (marker) { return String(marker.comment || '').trim() !== ''; }).length;
+    if (commentCount === 0) {
+      log('No non-empty marker comments to polish.', 'ok');
+      return;
+    }
+
+    log('Polishing ' + commentCount + ' Premiere marker comments with AI...');
+    let failed = false;
+    const polished = await polishMarkerComments(markers, settings, undefined, function (error) {
+      failed = true;
+      log('AI polish failed: ' + error.message + '. Premiere markers were not changed.', 'error');
+    });
+    if (failed) return;
+
+    const replacements = buildMarkerCommentReplacements(markers, polished);
+    if (replacements.length === 0) {
+      log('AI returned no changed comments. Premiere markers were not changed.', 'ok');
+      return;
+    }
+
+    ensureDirectory(outputParent);
+    const backupPath = outputParent + '/marker-polish-backup-' + backupTimestamp(new Date()) + '.json';
+    const backup = buildMarkerPolishBackup({
+      sequenceName: raw.sequenceName,
+      projectName: raw.projectName,
+      generatedAt: new Date().toISOString(),
+      replacements: replacements
+    });
+    writeTextFile(backupPath, JSON.stringify(backup, null, 2));
+    log('Backup written: ' + backupPath, 'ok');
+
+    const result = await evalScript('replaceMarkerComments(' + quoteForExtendScript(JSON.stringify(replacements)) + ')');
+    if (!result.ok) throw new Error(result.error);
+    for (const message of result.messages || []) log(message, message.indexOf('Skipped') === 0 ? 'error' : 'ok');
+    log('Updated ' + result.updatedCount + ' Premiere marker comments. Skipped ' + result.skippedCount + '.', result.skippedCount ? 'error' : 'ok');
+
+    el.aiEnabled.checked = false;
+    saveAiSettings(getAiSettingsFromUi());
+    log('Export-time AI Polish was turned off to avoid polishing the same comments again.', 'ok');
   } catch (error) {
     log(error.message, 'error');
   } finally {
@@ -382,6 +453,18 @@ function delay(ms) {
   return new Promise(function (resolve) { window.setTimeout(resolve, ms); });
 }
 
+function backupTimestamp(date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+    '-',
+    String(date.getHours()).padStart(2, '0'),
+    String(date.getMinutes()).padStart(2, '0'),
+    String(date.getSeconds()).padStart(2, '0')
+  ].join('');
+}
+
 function ensureDirectory(folderPath) {
   if (window.cep && window.cep.fs && window.cep.fs.stat && window.cep.fs.makedir) {
     const existing = window.cep.fs.stat(folderPath);
@@ -403,6 +486,6 @@ function writeTextFile(filePath, content) {
 }
 
 function quoteForExtendScript(value) { return '"' + String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"'; }
-function setBusy(isBusy) { el.refresh.disabled = isBusy; el.export.disabled = isBusy; el.chooseOutput.disabled = isBusy; el.chooseMaster.disabled = isBusy; el.recentOutput.disabled = isBusy; el.recentMaster.disabled = isBusy; el.aiEnabled.disabled = isBusy; el.aiBaseUrl.disabled = isBusy; el.aiModel.disabled = isBusy; el.aiApiKey.disabled = isBusy; el.aiPrompt.disabled = isBusy; }
+function setBusy(isBusy) { el.refresh.disabled = isBusy; el.polishMarkers.disabled = isBusy; el.export.disabled = isBusy; el.chooseOutput.disabled = isBusy; el.chooseMaster.disabled = isBusy; el.recentOutput.disabled = isBusy; el.recentMaster.disabled = isBusy; el.aiEnabled.disabled = isBusy; el.aiBaseUrl.disabled = isBusy; el.aiModel.disabled = isBusy; el.aiApiKey.disabled = isBusy; el.aiPrompt.disabled = isBusy; }
 function clearLog() { el.log.innerHTML = ''; }
 function log(message, type) { const item = document.createElement('li'); item.textContent = message; if (type) item.className = type; el.log.appendChild(item); }

@@ -48,6 +48,44 @@ export async function polishMarkerComments(markers, settings, requestJson = requ
   }
 }
 
+export function buildMarkerCommentReplacements(originalMarkers, polishedMarkers) {
+  const polishedByIndex = new Map((polishedMarkers || []).map((marker) => [Number(marker.index), marker]));
+  return (originalMarkers || []).reduce((items, marker) => {
+    const originalComment = String(marker.comment || '');
+    if (originalComment.trim() === '') return items;
+
+    const polished = polishedByIndex.get(Number(marker.index));
+    if (!polished) return items;
+
+    const polishedComment = String(polished.comment || '');
+    if (polishedComment === originalComment) return items;
+
+    items.push({
+      index: Number(marker.index),
+      startTicks: String(marker.startTicks || ''),
+      durationTicks: String(marker.durationTicks || ''),
+      originalComment,
+      polishedComment
+    });
+    return items;
+  }, []);
+}
+
+export function buildMarkerPolishBackup({ sequenceName, projectName, generatedAt, replacements }) {
+  return {
+    sequenceName: String(sequenceName || ''),
+    projectName: String(projectName || ''),
+    generatedAt: String(generatedAt || new Date().toISOString()),
+    replacements: (replacements || []).map((replacement) => ({
+      index: Number(replacement.index),
+      startTicks: String(replacement.startTicks || ''),
+      durationTicks: String(replacement.durationTicks || ''),
+      originalComment: String(replacement.originalComment || ''),
+      polishedComment: String(replacement.polishedComment || '')
+    }))
+  };
+}
+
 export function buildPolishRequest(markers, settings) {
   const normalizedSettings = normalizeAiSettings(settings);
   if (!normalizedSettings.enabled || !normalizedSettings.baseUrl || !normalizedSettings.model || !normalizedSettings.apiKey) return null;
