@@ -70,6 +70,7 @@ async function refreshSummary() {
     if (!summary.ok) throw new Error(summary.error);
     el.sequenceName.textContent = summary.sequenceName;
     el.markerCount.textContent = summary.markerCount + (summary.markerCount === 1 ? ' marker' : ' markers');
+    applyDefaultOutputFolder(summary.projectFolder);
   } catch (error) {
     el.sequenceName.textContent = 'No active sequence';
     el.markerCount.textContent = '0 markers';
@@ -77,6 +78,12 @@ async function refreshSummary() {
   } finally {
     setBusy(false);
   }
+}
+
+function applyDefaultOutputFolder(projectFolder) {
+  if (normalizeCepFilePath(el.outputPath.value)) return;
+  const normalized = normalizeCepFilePath(projectFolder);
+  if (normalized) el.outputPath.value = normalized;
 }
 
 function chooseMasterVideo() {

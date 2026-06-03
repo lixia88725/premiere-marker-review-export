@@ -89,4 +89,15 @@ describe('CEP package structure', () => {
     assert.match(main, /el\.applyPolishPreview\.addEventListener\('click', applyPolishPreview\)/);
     assert.match(main, /el\.cancelPolishPreview\.addEventListener\('click', cancelPolishPreview\)/);
   });
+
+  it('defaults the output folder to the current Premiere project folder', () => {
+    const main = read('js/main.js');
+    const host = read('jsx/host.jsx');
+
+    assert.match(host, /projectFolderOrEmpty/);
+    assert.match(host, /projectFolder: projectFolderOrEmpty\(\)/);
+    assert.match(main, /applyDefaultOutputFolder\(summary\.projectFolder\)/);
+    assert.match(main, /function applyDefaultOutputFolder/);
+    assert.match(main, /if \(normalizeCepFilePath\(el\.outputPath\.value\)\) return/);
+  });
 });

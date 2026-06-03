@@ -5,7 +5,7 @@ var REVIEW_EXPORT_TICKS_PER_SECOND = 254016000000;
 function getSequenceSummary() {
   try {
     var seq = activeSequenceOrThrow();
-    return stringifyResult({ ok: true, sequenceName: seq.name, projectName: projectNameOrSequence(seq), markerCount: countSequenceMarkers(seq) });
+    return stringifyResult({ ok: true, sequenceName: seq.name, projectName: projectNameOrSequence(seq), projectFolder: projectFolderOrEmpty(), markerCount: countSequenceMarkers(seq) });
   } catch (error) {
     return stringifyResult({ ok: false, error: String(error) });
   }
@@ -25,7 +25,7 @@ function collectMarkers() {
       index += 1;
       marker = seq.markers.getNextMarker(marker);
     }
-    return stringifyResult({ ok: true, sequenceName: seq.name, projectName: projectNameOrSequence(seq), markers: markers });
+    return stringifyResult({ ok: true, sequenceName: seq.name, projectName: projectNameOrSequence(seq), projectFolder: projectFolderOrEmpty(), markers: markers });
   } catch (error) {
     return stringifyResult({ ok: false, error: String(error) });
   }
@@ -130,6 +130,17 @@ function projectNameOrSequence(seq) {
     }
   } catch (_error) {}
   return seq.name;
+}
+
+function projectFolderOrEmpty() {
+  try {
+    if (app.project && app.project.path) {
+      var parts = String(app.project.path).split('/');
+      parts.pop();
+      return parts.join('/');
+    }
+  } catch (_error) {}
+  return '';
 }
 
 function activeSequenceOrThrow() {
