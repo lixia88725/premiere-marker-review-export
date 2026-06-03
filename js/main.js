@@ -32,11 +32,16 @@ const el = {
   refresh: document.getElementById('refresh'),
   polishMarkers: document.getElementById('polishMarkers'),
   export: document.getElementById('export'),
+  polishPreview: document.getElementById('polishPreview'),
+  polishPreviewList: document.getElementById('polishPreviewList'),
+  applyPolishPreview: document.getElementById('applyPolishPreview'),
+  cancelPolishPreview: document.getElementById('cancelPolishPreview'),
   log: document.getElementById('log')
 };
 const extensionRoot = decodeURI(cs.getSystemPath(SystemPath.EXTENSION)).replace(/\\/g, '/');
 const videoPresetPath = extensionRoot + '/presets/review-720p.epr';
 const framePresetPath = extensionRoot + '/presets/review-frame.epr';
+let pendingPolishPreview = null;
 
 el.chooseOutput.addEventListener('click', chooseOutputFolder);
 el.chooseMaster.addEventListener('click', chooseMasterVideo);
@@ -45,6 +50,8 @@ el.recentMaster.addEventListener('click', function () { toggleRecentMenu(el.rece
 el.refresh.addEventListener('click', refreshSummary);
 el.polishMarkers.addEventListener('click', polishPremiereMarkers);
 el.export.addEventListener('click', exportReport);
+el.applyPolishPreview.addEventListener('click', applyPolishPreview);
+el.cancelPolishPreview.addEventListener('click', cancelPolishPreview);
 document.addEventListener('click', closeRecentMenusOnOutsideClick);
 applyAiSettingsToUi(loadAiSettings());
 bindAiSettingsAutosave();
@@ -149,6 +156,7 @@ async function exportReport() {
 
 async function polishPremiereMarkers() {
   clearLog();
+  cancelPolishPreview();
   const outputParent = normalizeCepFilePath(el.outputPath.value);
   if (!outputParent) { log('Choose an output parent folder first so the original marker comments can be backed up.', 'error'); return; }
 
@@ -158,8 +166,6 @@ async function polishPremiereMarkers() {
     log('Fill in AI Base URL, Model, and API Key before polishing Premiere markers.', 'error');
     return;
   }
-
-  if (!window.confirm('This will replace the current Premiere sequence marker comments with AI-polished text. A backup JSON will be written to the output folder first. Save your Premiere project before continuing.')) return;
 
   setBusy(true);
   try {
@@ -187,18 +193,42 @@ async function polishPremiereMarkers() {
       return;
     }
 
-    ensureDirectory(outputParent);
-    const backupPath = outputParent + '/marker-polish-backup-' + backupTimestamp(new Date()) + '.json';
-    const backup = buildMarkerPolishBackup({
+    pendingPolishPreview = {
+      outputParent: outputParent,
       sequenceName: raw.sequenceName,
       projectName: raw.projectName,
-      generatedAt: new Date().toISOString(),
       replacements: replacements
+    };
+    renderPolishPreview(pendingPolishPreview);
+    log('Review the AI polish preview, then apply or cancel.', 'ok');
+  } catch (error) {
+    log(error.message, 'error');
+  } finally {
+    setBusy(false);
+    refreshSummary();
+  }
+}
+
+async function applyPolishPreview() {
+  if (!pendingPolishPreview || !pendingPolishPreview.replacements || pendingPolishPreview.replacements.length === 0) {
+    log('No AI polish preview to apply.', 'error');
+    return;
+  }
+
+  setBusy(true);
+  try {
+    ensureDirectory(pendingPolishPreview.outputParent);
+    const backupPath = pendingPolishPreview.outputParent + '/marker-polish-backup-' + backupTimestamp(new Date()) + '.json';
+    const backup = buildMarkerPolishBackup({
+      sequenceName: pendingPolishPreview.sequenceName,
+      projectName: pendingPolishPreview.projectName,
+      generatedAt: new Date().toISOString(),
+      replacements: pendingPolishPreview.replacements
     });
     writeTextFile(backupPath, JSON.stringify(backup, null, 2));
     log('Backup written: ' + backupPath, 'ok');
 
-    const result = await evalScript('replaceMarkerComments(' + quoteForExtendScript(JSON.stringify(replacements)) + ')');
+    const result = await evalScript('replaceMarkerComments(' + quoteForExtendScript(JSON.stringify(pendingPolishPreview.replacements)) + ')');
     if (!result.ok) throw new Error(result.error);
     for (const message of result.messages || []) log(message, message.indexOf('Skipped') === 0 ? 'error' : 'ok');
     log('Updated ' + result.updatedCount + ' Premiere marker comments. Skipped ' + result.skippedCount + '.', result.skippedCount ? 'error' : 'ok');
@@ -206,12 +236,51 @@ async function polishPremiereMarkers() {
     el.aiEnabled.checked = false;
     saveAiSettings(getAiSettingsFromUi());
     log('Export-time AI Polish was turned off to avoid polishing the same comments again.', 'ok');
+    cancelPolishPreview();
   } catch (error) {
     log(error.message, 'error');
   } finally {
     setBusy(false);
     refreshSummary();
   }
+}
+
+function cancelPolishPreview() {
+  pendingPolishPreview = null;
+  el.polishPreview.hidden = true;
+  el.polishPreviewList.innerHTML = '';
+}
+
+function renderPolishPreview(preview) {
+  el.polishPreviewList.innerHTML = '';
+  for (const replacement of preview.replacements) {
+    const item = document.createElement('article');
+    item.className = 'preview-item';
+
+    const meta = document.createElement('div');
+    meta.className = 'preview-meta';
+    meta.textContent = 'Marker ' + replacement.index;
+    item.appendChild(meta);
+
+    const copy = document.createElement('div');
+    copy.className = 'preview-copy';
+    copy.appendChild(previewTextBlock('Original', replacement.originalComment));
+    copy.appendChild(previewTextBlock('Polished', replacement.polishedComment));
+    item.appendChild(copy);
+    el.polishPreviewList.appendChild(item);
+  }
+  el.polishPreview.hidden = false;
+}
+
+function previewTextBlock(label, text) {
+  const block = document.createElement('div');
+  const heading = document.createElement('strong');
+  heading.textContent = label;
+  const paragraph = document.createElement('p');
+  paragraph.textContent = text;
+  block.appendChild(heading);
+  block.appendChild(paragraph);
+  return block;
 }
 
 async function maybePolishMarkerComments(markers) {
@@ -486,6 +555,6 @@ function writeTextFile(filePath, content) {
 }
 
 function quoteForExtendScript(value) { return '"' + String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"'; }
-function setBusy(isBusy) { el.refresh.disabled = isBusy; el.polishMarkers.disabled = isBusy; el.export.disabled = isBusy; el.chooseOutput.disabled = isBusy; el.chooseMaster.disabled = isBusy; el.recentOutput.disabled = isBusy; el.recentMaster.disabled = isBusy; el.aiEnabled.disabled = isBusy; el.aiBaseUrl.disabled = isBusy; el.aiModel.disabled = isBusy; el.aiApiKey.disabled = isBusy; el.aiPrompt.disabled = isBusy; }
+function setBusy(isBusy) { el.refresh.disabled = isBusy; el.polishMarkers.disabled = isBusy; el.export.disabled = isBusy; el.applyPolishPreview.disabled = isBusy; el.cancelPolishPreview.disabled = isBusy; el.chooseOutput.disabled = isBusy; el.chooseMaster.disabled = isBusy; el.recentOutput.disabled = isBusy; el.recentMaster.disabled = isBusy; el.aiEnabled.disabled = isBusy; el.aiBaseUrl.disabled = isBusy; el.aiModel.disabled = isBusy; el.aiApiKey.disabled = isBusy; el.aiPrompt.disabled = isBusy; }
 function clearLog() { el.log.innerHTML = ''; }
 function log(message, type) { const item = document.createElement('li'); item.textContent = message; if (type) item.className = type; el.log.appendChild(item); }

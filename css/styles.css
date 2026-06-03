@@ -5,7 +5,7 @@ body { margin: 0; background: var(--bg); color: var(--text); font: 13px/1.45 -ap
 header { margin-bottom: 18px; }
 h1 { margin: 0 0 4px; font-size: 19px; font-weight: 650; }
 p { margin: 0; color: var(--muted); }
-.status-card, .field-group, .log-section { border: 1px solid var(--border); background: var(--panel); border-radius: 6px; padding: 12px; margin-bottom: 12px; }
+.status-card, .field-group, .log-section, .preview-section { border: 1px solid var(--border); background: var(--panel); border-radius: 6px; padding: 12px; margin-bottom: 12px; }
 .label, label { display: block; margin-bottom: 7px; color: var(--muted); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; }
 .value { font-size: 15px; font-weight: 650; word-break: break-word; }
 .subvalue { margin-top: 3px; color: var(--muted); }
@@ -31,3 +31,11 @@ button:disabled { cursor: default; opacity: .55; }
 .compact-fields label { margin: 5px 0 0; }
 textarea { width: 100%; min-height: 86px; resize: vertical; border: 1px solid var(--border); border-radius: 5px; padding: 8px; color: var(--text); background: #181b21; font: inherit; }
 .ai-polish input[type="password"] { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+
+.preview-list { display: grid; gap: 10px; max-height: 320px; overflow: auto; }
+.preview-item { border: 1px solid var(--border); border-radius: 5px; padding: 10px; background: #222733; }
+.preview-meta { margin-bottom: 8px; color: var(--muted); font-size: 12px; }
+.preview-copy { display: grid; gap: 8px; }
+.preview-copy strong { display: block; margin-bottom: 3px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+.preview-copy p { white-space: pre-wrap; word-break: break-word; color: var(--text); }
+.preview-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }

@@ -71,4 +71,22 @@ describe('CEP package structure', () => {
     assert.match(host, /function replaceMarkerComments/);
     assert.match(host, /marker\.comments = replacement\.polishedComment/);
   });
+
+  it('previews AI marker polish before applying it to Premiere', () => {
+    const html = read('index.html');
+    const main = read('js/main.js');
+
+    assert.match(html, /id="polishPreview"/);
+    assert.match(html, /AI Polish Preview/);
+    assert.match(html, /id="polishPreviewList"/);
+    assert.match(html, /id="applyPolishPreview"/);
+    assert.match(html, /Apply to Premiere Markers/);
+    assert.match(html, /id="cancelPolishPreview"/);
+    assert.match(main, /let pendingPolishPreview = null/);
+    assert.match(main, /function renderPolishPreview/);
+    assert.match(main, /function applyPolishPreview/);
+    assert.match(main, /function cancelPolishPreview/);
+    assert.match(main, /el\.applyPolishPreview\.addEventListener\('click', applyPolishPreview\)/);
+    assert.match(main, /el\.cancelPolishPreview\.addEventListener\('click', cancelPolishPreview\)/);
+  });
 });
