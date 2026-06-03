@@ -71,6 +71,7 @@ async function refreshSummary() {
     el.sequenceName.textContent = summary.sequenceName;
     el.markerCount.textContent = summary.markerCount + (summary.markerCount === 1 ? ' marker' : ' markers');
     applyDefaultOutputFolder(summary.projectFolder);
+    logProjectPathDiagnostics(summary);
   } catch (error) {
     el.sequenceName.textContent = 'No active sequence';
     el.markerCount.textContent = '0 markers';
@@ -78,6 +79,13 @@ async function refreshSummary() {
   } finally {
     setBusy(false);
   }
+}
+
+function logProjectPathDiagnostics(summary) {
+  if (normalizeCepFilePath(el.outputPath.value)) return;
+  log('Project path from Premiere: ' + (summary.projectPath || '(empty)'), 'error');
+  log('Project folder from Premiere: ' + (summary.projectFolder || '(empty)'), 'error');
+  log('Production path from Premiere: ' + (summary.productionPath || '(empty)'), 'error');
 }
 
 function applyDefaultOutputFolder(projectFolder) {

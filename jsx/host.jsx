@@ -5,7 +5,7 @@ var REVIEW_EXPORT_TICKS_PER_SECOND = 254016000000;
 function getSequenceSummary() {
   try {
     var seq = activeSequenceOrNull();
-    return stringifyResult({ ok: true, sequenceName: seq ? seq.name : 'No active sequence', projectName: projectNameOrSequence(seq), projectFolder: projectFolderOrEmpty(), markerCount: seq ? countSequenceMarkers(seq) : 0 });
+    return stringifyResult({ ok: true, sequenceName: seq ? seq.name : 'No active sequence', projectName: projectNameOrSequence(seq), projectPath: projectPathOrEmpty(), projectFolder: projectFolderOrEmpty(), productionPath: productionPathOrEmpty(), markerCount: seq ? countSequenceMarkers(seq) : 0 });
   } catch (error) {
     return stringifyResult({ ok: false, error: String(error) });
   }
@@ -124,27 +124,56 @@ function queueMarkerExport(seq, marker, outputPath, presetPath) {
 
 function projectNameOrSequence(seq) {
   try {
-    if (app.project && app.project.path) {
-      var projectFile = new File(app.project.path);
+    var projectPath = projectPathOrEmpty();
+    if (projectPath) {
+      var projectFile = new File(projectPath);
       if (projectFile && projectFile.name) return projectFile.name;
-      var parts = String(app.project.path).split('/');
+      var parts = String(projectPath).split('/');
       return parts[parts.length - 1] || seq.name;
     }
   } catch (_error) {}
   return seq ? seq.name : '';
 }
 
+function projectPathOrEmpty() {
+  try {
+    if (app.project && app.project.path) return String(app.project.path);
+    var fallbackProject = projectFromOpenProjectsOrNull();
+    if (fallbackProject && fallbackProject.path) return String(fallbackProject.path);
+  } catch (_error) {}
+  return '';
+}
+
 function projectFolderOrEmpty() {
   try {
-    if (app.project && app.project.path) {
-      var projectFile = new File(app.project.path);
+    var projectPath = projectPathOrEmpty();
+    if (projectPath) {
+      var projectFile = new File(projectPath);
       if (projectFile && projectFile.parent && projectFile.parent.fsName) return projectFile.parent.fsName;
-      var parts = String(app.project.path).split('/');
+      var parts = String(projectPath).split('/');
       parts.pop();
       return parts.join('/');
     }
   } catch (_error) {}
   return '';
+}
+
+function productionPathOrEmpty() {
+  try {
+    if (app.production && app.production.path) return String(app.production.path);
+  } catch (_error) {}
+  return '';
+}
+
+function projectFromOpenProjectsOrNull() {
+  try {
+    if (!app.projects || !app.projects.numProjects) return null;
+    for (var i = 0; i < app.projects.numProjects; i += 1) {
+      var project = app.projects[i];
+      if (project && project.path) return project;
+    }
+  } catch (_error) {}
+  return null;
 }
 
 function activeSequenceOrThrow() {
