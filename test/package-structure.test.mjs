@@ -98,6 +98,8 @@ describe('CEP package structure', () => {
     assert.match(host, /projectFolder: projectFolderOrEmpty\(\)/);
     assert.match(host, /new File\(app\.project\.path\)/);
     assert.match(host, /projectFile\.parent\.fsName/);
+    assert.match(host, /var seq = activeSequenceOrNull\(\)/);
+    assert.match(host, /sequenceName: seq \? seq\.name : 'No active sequence'/);
     assert.match(main, /applyDefaultOutputFolder\(summary\.projectFolder\)/);
     assert.match(main, /function applyDefaultOutputFolder/);
     assert.match(main, /if \(normalizeCepFilePath\(el\.outputPath\.value\)\) return/);

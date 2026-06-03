@@ -4,8 +4,8 @@ var REVIEW_EXPORT_TICKS_PER_SECOND = 254016000000;
 
 function getSequenceSummary() {
   try {
-    var seq = activeSequenceOrThrow();
-    return stringifyResult({ ok: true, sequenceName: seq.name, projectName: projectNameOrSequence(seq), projectFolder: projectFolderOrEmpty(), markerCount: countSequenceMarkers(seq) });
+    var seq = activeSequenceOrNull();
+    return stringifyResult({ ok: true, sequenceName: seq ? seq.name : 'No active sequence', projectName: projectNameOrSequence(seq), projectFolder: projectFolderOrEmpty(), markerCount: seq ? countSequenceMarkers(seq) : 0 });
   } catch (error) {
     return stringifyResult({ ok: false, error: String(error) });
   }
@@ -131,7 +131,7 @@ function projectNameOrSequence(seq) {
       return parts[parts.length - 1] || seq.name;
     }
   } catch (_error) {}
-  return seq.name;
+  return seq ? seq.name : '';
 }
 
 function projectFolderOrEmpty() {
@@ -149,6 +149,11 @@ function projectFolderOrEmpty() {
 
 function activeSequenceOrThrow() {
   if (!app.project || !app.project.activeSequence) throw new Error('No active sequence. Open a sequence timeline before exporting.');
+  return app.project.activeSequence;
+}
+
+function activeSequenceOrNull() {
+  if (!app.project || !app.project.activeSequence) return null;
   return app.project.activeSequence;
 }
 
