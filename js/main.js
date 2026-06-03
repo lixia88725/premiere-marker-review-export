@@ -42,7 +42,7 @@ const extensionRoot = decodeURI(cs.getSystemPath(SystemPath.EXTENSION)).replace(
 const videoPresetPath = extensionRoot + '/presets/review-720p.epr';
 const framePresetPath = extensionRoot + '/presets/review-frame.epr';
 let pendingPolishPreview = null;
-const startupRefreshDelays = [0, 800, 2000];
+const startupRefreshDelays = [0, 800, 2000, 5000, 10000];
 
 el.chooseOutput.addEventListener('click', chooseOutputFolder);
 el.chooseMaster.addEventListener('click', chooseMasterVideo);
@@ -54,6 +54,8 @@ el.export.addEventListener('click', exportReport);
 el.applyPolishPreview.addEventListener('click', applyPolishPreview);
 el.cancelPolishPreview.addEventListener('click', cancelPolishPreview);
 document.addEventListener('click', closeRecentMenusOnOutsideClick);
+window.addEventListener('focus', refreshDefaultOutputFolderWhenEmpty);
+document.addEventListener('visibilitychange', refreshDefaultOutputFolderWhenEmpty);
 applyAiSettingsToUi(loadAiSettings());
 bindAiSettingsAutosave();
 loadHostScript().then(runStartupRefresh).catch(function (error) { log(error.message, 'error'); });
@@ -72,6 +74,12 @@ async function runStartupRefresh() {
     await refreshSummary({ diagnostics: isLastAttempt });
     if (normalizeCepFilePath(el.outputPath.value)) return;
   }
+}
+
+async function refreshDefaultOutputFolderWhenEmpty() {
+  if (document.hidden) return;
+  if (normalizeCepFilePath(el.outputPath.value)) return;
+  await refreshSummary({ diagnostics: false });
 }
 
 async function refreshSummary(options) {
