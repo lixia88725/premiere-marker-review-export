@@ -62,6 +62,10 @@ LHSN_Review_20260602_V1/assets/
 
 分享报告时，请保持 `review.html` 和 `assets/` 在同一个文件夹里，因为 HTML 使用相对路径引用图片和视频。
 
+## 后续步骤
+
+> **飞书用户**：如果接收方使用飞书，可以通过 [Lark HTML Review Import](https://github.com/lixia88725/lark-html-review-import) 把导出的 HTML 报告一键导入飞书文档，自动修复截图和视频嵌入。
+
 ## AI Polish 批注润色
 
 AI Polish 只修改导出的 HTML 报告里的批注文本，不会修改 Premiere marker 原文。
