@@ -136,6 +136,12 @@ async function exportReport() {
     writeTextFile(outputRoot + '/review.html', html);
     log('Wrote ' + outputRoot + '/review.html.', 'ok');
 
+    if (hasFallbackMasterVideo()) {
+      log('Fallback master video selected. Exporting media assets with FFmpeg instead of Adobe Media Encoder...', 'ok');
+      await exportMediaWithFfmpeg(markers, outputRoot);
+      return;
+    }
+
     if (!hasAme2022()) {
       log('Adobe Media Encoder 2022 was not found. Trying FFmpeg fallback from the master video...', 'error');
       await exportMediaWithFfmpeg(markers, outputRoot);
@@ -351,6 +357,10 @@ function bindAiSettingsAutosave() {
     input.addEventListener('change', function () { saveAiSettings(getAiSettingsFromUi()); });
     input.addEventListener('input', function () { saveAiSettings(getAiSettingsFromUi()); });
   }
+}
+
+function hasFallbackMasterVideo() {
+  return !!normalizeCepFilePath(el.masterVideoPath.value);
 }
 
 async function exportMediaWithFfmpeg(markers, outputRoot) {

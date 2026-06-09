@@ -133,6 +133,16 @@ describe('CEP package structure', () => {
     assert.match(host, /finally \{\s*restoreSequenceInOut\(seq, previousInOut\);/);
   });
 
+  it('uses the fallback master video before trying Adobe Media Encoder', () => {
+    const html = read('index.html');
+    const main = read('js/main.js');
+
+    assert.match(html, /Optional: use FFmpeg instead of AME 2022/);
+    assert.match(main, /function hasFallbackMasterVideo/);
+    assert.ok(main.indexOf('if (hasFallbackMasterVideo())') < main.indexOf('if (!hasAme2022())'));
+    assert.match(main, /Exporting media assets with FFmpeg instead of Adobe Media Encoder/);
+  });
+
   it('sets a timeout for AI polish API requests', () => {
     const ai = read('js/aiPolish.js');
 

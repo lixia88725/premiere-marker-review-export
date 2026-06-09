@@ -13,7 +13,7 @@ The report is written as `review.html` plus an `assets/` folder. Point markers b
 - Writes a paper-style HTML feedback table with relative media paths.
 - Automatically creates versioned output folders: `Project_Review_YYYYMMDD_V1`.
 - Hides the Marker column when marker names are empty.
-- Supports FFmpeg fallback when Adobe Media Encoder 2022 is unavailable.
+- Uses FFmpeg from a full master video when `Fallback master video` is set, before trying Adobe Media Encoder 2022.
 - Optional AI comment polishing through OpenAI-compatible chat completions APIs.
 
 ## Requirements
@@ -47,7 +47,7 @@ For internal sharing, you can package the runtime plugin folder with a small `In
 2. Add sequence markers with comments.
 3. Open the `Marker Review Export` panel.
 4. Choose an Output folder. This is the parent folder.
-5. Optional: choose a Fallback master video if AME 2022 is unavailable.
+5. Optional: choose a Fallback master video to avoid AME 2022, or when AME 2022 is unavailable.
 6. Optional: enable AI Polish comments and fill API settings.
 7. Click Export Report.
 
@@ -84,7 +84,7 @@ API keys are stored locally in the CEP panel's `localStorage`. This is convenien
 
 ## FFmpeg fallback
 
-If Adobe Media Encoder 2022 is not installed, the panel can export marker media from a full master video using FFmpeg.
+If `Fallback master video` is set, the panel exports marker media from that full master video using FFmpeg before trying Adobe Media Encoder 2022.
 
 The fallback searches common FFmpeg paths:
 

@@ -15,7 +15,7 @@ English README: [README.en.md](README.en.md)
 - 生成纸张风格的本地 HTML 表格报告。
 - 自动创建版本化导出文件夹，例如 `Project_Review_YYYYMMDD_V1`。
 - 如果所有 marker 名称为空，自动隐藏 Marker 列。
-- 没有 Adobe Media Encoder 2022 时，支持通过 FFmpeg 和 master video fallback 导出媒体。
+- 填写 `Fallback master video` 时，优先通过 FFmpeg 从这条完整 master video 导出媒体；未填写时才尝试 Adobe Media Encoder 2022。
 - 可选 AI Polish：导出前润色 marker 批注，只影响本次报告，不回写 Premiere 项目。
 
 ## 系统要求
@@ -23,7 +23,7 @@ English README: [README.en.md](README.en.md)
 - macOS
 - Adobe Premiere Pro 2022
 - 推荐安装 Adobe Media Encoder 2022
-- 如果没有 AME 2022，需要 FFmpeg 和一条完整导出的 master video
+- 可选 fallback：FFmpeg 和一条完整导出的 master video
 
 这个插件只面向 Premiere Pro 2022 / CEP。它不是 UXP 插件，也没有针对 Premiere Pro 2023 或更新版本做兼容测试。
 
@@ -49,7 +49,7 @@ defaults write com.adobe.CSXS.11 PlayerDebugMode 1
 2. 在当前 sequence 上打好 markers，并写好批注。
 3. 打开 `Marker Review Export` 面板。
 4. 选择 `Output folder`。这里选择的是父目录。
-5. 如果没有 AME 2022，可选择 `Fallback master video`。
+5. 如果想避开 AME 2022，或机器上没有 AME 2022，可选择 `Fallback master video`。
 6. 如需润色批注，可勾选 `AI Polish comments` 并填写 API 设置。
 7. 点击 `Export Report`。
 
@@ -90,7 +90,7 @@ Model: deepseek-v4-flash 或 deepseek-v4-pro
 
 ## FFmpeg fallback
 
-如果本机没有 Adobe Media Encoder 2022，插件可以从一条完整 master video 中用 FFmpeg 导出 marker 媒体。
+如果选择了 `Fallback master video`，插件会优先从这条完整 master video 中用 FFmpeg 导出 marker 媒体，而不是调用 Adobe Media Encoder 2022。
 
 常见 FFmpeg 路径：
 
