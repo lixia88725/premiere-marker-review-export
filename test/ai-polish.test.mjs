@@ -7,6 +7,7 @@ import {
   buildMarkerPolishBackup,
   buildPolishRequest,
   loadAiSettings,
+  normalizeChatCompletionsUrl,
   parsePolishResponse,
   polishMarkerComments,
   saveAiSettings
@@ -61,6 +62,15 @@ describe('buildPolishRequest', () => {
     const payload = JSON.parse(request.body.messages[1].content);
     assert.deepEqual(payload.items.map((item) => item.index), [1, 3]);
     assert.equal(payload.items[0].comment, '这礼速度有点太快了');
+  });
+
+  it('accepts provider base URLs by appending the chat completions path', () => {
+    const rootRequest = buildPolishRequest(markers, { ...enabledSettings, baseUrl: 'https://api.deepseek.com' });
+    const fullRequest = buildPolishRequest(markers, { ...enabledSettings, baseUrl: 'https://api.deepseek.com/chat/completions' });
+
+    assert.equal(rootRequest.url, 'https://api.deepseek.com/chat/completions');
+    assert.equal(fullRequest.url, 'https://api.deepseek.com/chat/completions');
+    assert.equal(normalizeChatCompletionsUrl('https://api.deepseek.com/'), 'https://api.deepseek.com/chat/completions');
   });
 });
 

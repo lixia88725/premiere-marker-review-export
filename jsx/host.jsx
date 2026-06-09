@@ -253,4 +253,52 @@ function formatTicks(ticks) {
 
 function pad2(value) { return value < 10 ? '0' + value : String(value); }
 function pad3(value) { if (value < 10) return '00' + value; if (value < 100) return '0' + value; return String(value); }
+if (typeof JSON === 'undefined') {
+  JSON = {};
+}
+
+if (typeof JSON.parse !== 'function') {
+  JSON.parse = function (text) {
+    return eval('(' + String(text) + ')');
+  };
+}
+
+if (typeof JSON.stringify !== 'function') {
+  JSON.stringify = function (value) {
+    return reviewExportStringify(value);
+  };
+}
+
+function reviewExportStringify(value) {
+  var type = typeof value;
+  if (value === null) return 'null';
+  if (type === 'string') return '"' + reviewExportEscapeJsonString(value) + '"';
+  if (type === 'number') return isFinite(value) ? String(value) : 'null';
+  if (type === 'boolean') return value ? 'true' : 'false';
+  if (type === 'undefined' || type === 'function') return 'null';
+  if (value instanceof Array) {
+    var items = [];
+    for (var i = 0; i < value.length; i += 1) {
+      items.push(reviewExportStringify(value[i]));
+    }
+    return '[' + items.join(',') + ']';
+  }
+  var pairs = [];
+  for (var key in value) {
+    if (value.hasOwnProperty(key) && typeof value[key] !== 'function') {
+      pairs.push(reviewExportStringify(String(key)) + ':' + reviewExportStringify(value[key]));
+    }
+  }
+  return '{' + pairs.join(',') + '}';
+}
+
+function reviewExportEscapeJsonString(value) {
+  return String(value)
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\r/g, '\\r')
+    .replace(/\n/g, '\\n')
+    .replace(/\t/g, '\\t');
+}
+
 function stringifyResult(value) { return JSON.stringify(value); }

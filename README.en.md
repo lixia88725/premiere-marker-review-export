@@ -67,9 +67,12 @@ AI Polish only changes comments in the exported HTML report. It does **not** wri
 The panel supports OpenAI-compatible Chat Completions APIs. For DeepSeek, use:
 
 ```text
-Base URL: https://api.deepseek.com/chat/completions
+Base URL: https://api.deepseek.com
 Model: deepseek-v4-flash or deepseek-v4-pro
 ```
+
+The panel automatically appends the OpenAI-compatible `/chat/completions` path.
+Using the full `https://api.deepseek.com/chat/completions` URL also works.
 
 Suggested lightweight prompt:
 

@@ -73,9 +73,12 @@ AI Polish 只修改导出的 HTML 报告里的批注文本，不会修改 Premie
 插件支持 OpenAI-compatible Chat Completions API。使用 DeepSeek 时可以填写：
 
 ```text
-Base URL: https://api.deepseek.com/chat/completions
+Base URL: https://api.deepseek.com
 Model: deepseek-v4-flash 或 deepseek-v4-pro
 ```
+
+插件会自动补全 OpenAI-compatible 的 `/chat/completions` 路径；如果你填写完整的
+`https://api.deepseek.com/chat/completions` 也可以。
 
 推荐轻量 Prompt：
 

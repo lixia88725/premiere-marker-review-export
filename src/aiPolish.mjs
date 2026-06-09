@@ -113,7 +113,7 @@ export function buildPolishRequest(markers, settings) {
   };
 
   return {
-    url: normalizedSettings.baseUrl,
+    url: normalizeChatCompletionsUrl(normalizedSettings.baseUrl),
     timeoutMs: DEFAULT_AI_TIMEOUT_MS,
     headers: {
       Authorization: 'Bearer ' + normalizedSettings.apiKey,
@@ -121,6 +121,13 @@ export function buildPolishRequest(markers, settings) {
     },
     body
   };
+}
+
+export function normalizeChatCompletionsUrl(baseUrl) {
+  const trimmed = String(baseUrl || '').trim().replace(/\/+$/, '');
+  if (!trimmed) return '';
+  if (/\/chat\/completions$/i.test(trimmed)) return trimmed;
+  return trimmed + '/chat/completions';
 }
 
 export function parsePolishResponse(responseText) {

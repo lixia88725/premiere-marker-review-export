@@ -456,6 +456,10 @@ function runProcess(args) {
 function evalScript(script) {
   return new Promise(function (resolve) {
     cs.evalScript(script, function (result) {
+      if (result === undefined || result === 'undefined' || result === null || result === '') {
+        resolve({ ok: true });
+        return;
+      }
       try { resolve(JSON.parse(result)); }
       catch (_error) { resolve({ ok: false, error: String(result || 'No response from Premiere.') }); }
     });

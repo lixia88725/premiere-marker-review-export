@@ -114,7 +114,7 @@ function buildPolishRequest(markers, settings) {
   };
 
   return {
-    url: normalizedSettings.baseUrl,
+    url: normalizeChatCompletionsUrl(normalizedSettings.baseUrl),
     timeoutMs: DEFAULT_AI_TIMEOUT_MS,
     headers: {
       Authorization: 'Bearer ' + normalizedSettings.apiKey,
@@ -122,6 +122,13 @@ function buildPolishRequest(markers, settings) {
     },
     body
   };
+}
+
+function normalizeChatCompletionsUrl(baseUrl) {
+  const trimmed = String(baseUrl || '').trim().replace(/\/+$/, '');
+  if (!trimmed) return '';
+  if (/\/chat\/completions$/i.test(trimmed)) return trimmed;
+  return trimmed + '/chat/completions';
 }
 
 function parsePolishResponse(responseText) {
@@ -209,6 +216,7 @@ window.ReviewAiPolish = {
   buildMarkerCommentReplacements: buildMarkerCommentReplacements,
   buildMarkerPolishBackup: buildMarkerPolishBackup,
   buildPolishRequest: buildPolishRequest,
+  normalizeChatCompletionsUrl: normalizeChatCompletionsUrl,
   parsePolishResponse: parsePolishResponse,
   normalizeAiSettings: normalizeAiSettings
 };
