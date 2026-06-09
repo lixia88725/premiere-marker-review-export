@@ -139,8 +139,18 @@ describe('CEP package structure', () => {
 
     assert.match(html, /Optional: use FFmpeg instead of AME 2022/);
     assert.match(main, /function hasFallbackMasterVideo/);
-    assert.ok(main.indexOf('if (hasFallbackMasterVideo())') < main.indexOf('if (!hasAme2022())'));
+    assert.ok(main.indexOf("if (fallbackMasterVideo && ffmpegPath)") < main.indexOf("if (hasAme)"));
     assert.match(main, /Exporting media assets with FFmpeg instead of Adobe Media Encoder/);
+  });
+
+  it('checks media export capability before writing the report', () => {
+    const main = read('js/main.js');
+
+    assert.match(main, /const mediaExportPlan = getMediaExportPlan\(\)/);
+    assert.ok(main.indexOf('getMediaExportPlan()') < main.indexOf('const outputRoot = createReviewOutputFolder'));
+    assert.match(main, /function getMediaExportPlan/);
+    assert.match(main, /No media exporter is available/);
+    assert.match(main, /HTML report will be generated without media assets/);
   });
 
   it('sets a timeout for AI polish API requests', () => {

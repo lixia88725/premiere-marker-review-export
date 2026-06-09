@@ -129,6 +129,8 @@ async function exportReport() {
     if (!raw.ok) throw new Error(raw.error);
     const markers = normalizeMarkers(raw.markers);
     const reportMarkers = await maybePolishMarkerComments(markers);
+    const mediaExportPlan = getMediaExportPlan();
+    logMediaExportPlan(mediaExportPlan);
     rememberPath(RECENT_OUTPUTS_KEY, outputParent);
     const outputRoot = createReviewOutputFolder(outputParent, raw.projectName || raw.sequenceName);
     ensureDirectory(outputRoot + '/assets');
@@ -136,15 +138,14 @@ async function exportReport() {
     writeTextFile(outputRoot + '/review.html', html);
     log('Wrote ' + outputRoot + '/review.html.', 'ok');
 
-    if (hasFallbackMasterVideo()) {
+    if (mediaExportPlan.mode === 'ffmpeg') {
       log('Fallback master video selected. Exporting media assets with FFmpeg instead of Adobe Media Encoder...', 'ok');
       await exportMediaWithFfmpeg(markers, outputRoot);
       return;
     }
 
-    if (!hasAme2022()) {
-      log('Adobe Media Encoder 2022 was not found. Trying FFmpeg fallback from the master video...', 'error');
-      await exportMediaWithFfmpeg(markers, outputRoot);
+    if (mediaExportPlan.mode === 'none') {
+      log('HTML report will be generated without media assets.', 'error');
       return;
     }
 
@@ -361,6 +362,28 @@ function bindAiSettingsAutosave() {
 
 function hasFallbackMasterVideo() {
   return !!normalizeCepFilePath(el.masterVideoPath.value);
+}
+
+function getMediaExportPlan() {
+  const fallbackMasterVideo = normalizeCepFilePath(el.masterVideoPath.value);
+  const ffmpegPath = findFfmpegPath();
+  const hasAme = hasAme2022();
+  if (fallbackMasterVideo && ffmpegPath) return { mode: 'ffmpeg', fallbackMasterVideo: fallbackMasterVideo, ffmpegPath: ffmpegPath, hasAme: hasAme };
+  if (fallbackMasterVideo && !ffmpegPath) return { mode: 'none', fallbackMasterVideo: fallbackMasterVideo, ffmpegPath: '', hasAme: hasAme, error: 'Fallback master video is selected, but FFmpeg was not found.' };
+  if (hasAme) return { mode: 'ame', fallbackMasterVideo: '', ffmpegPath: ffmpegPath, hasAme: true };
+  return { mode: 'none', fallbackMasterVideo: '', ffmpegPath: ffmpegPath, hasAme: false, error: 'No media exporter is available. Install Adobe Media Encoder 2022, or install FFmpeg and choose a fallback master video.' };
+}
+
+function logMediaExportPlan(plan) {
+  if (plan.mode === 'ffmpeg') {
+    log('Media export check: FFmpeg fallback is available.', 'ok');
+    return;
+  }
+  if (plan.mode === 'ame') {
+    log('Media export check: Adobe Media Encoder 2022 is available.', 'ok');
+    return;
+  }
+  log('Media export check: ' + plan.error, 'error');
 }
 
 async function exportMediaWithFfmpeg(markers, outputRoot) {
