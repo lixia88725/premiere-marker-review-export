@@ -243,18 +243,25 @@ async function applyPolishPreview() {
 
   setBusy(true);
   try {
+    const editedReplacements = syncPolishPreviewEdits();
+    if (editedReplacements.length === 0) {
+      log('No edited AI polish changes to apply.', 'ok');
+      cancelPolishPreview();
+      return;
+    }
+
     ensureDirectory(pendingPolishPreview.outputParent);
     const backupPath = pendingPolishPreview.outputParent + '/marker-polish-backup-' + backupTimestamp(new Date()) + '.json';
     const backup = buildMarkerPolishBackup({
       sequenceName: pendingPolishPreview.sequenceName,
       projectName: pendingPolishPreview.projectName,
       generatedAt: new Date().toISOString(),
-      replacements: pendingPolishPreview.replacements
+      replacements: editedReplacements
     });
     writeTextFile(backupPath, JSON.stringify(backup, null, 2));
     log('Backup written: ' + backupPath, 'ok');
 
-    const result = await evalScript('replaceMarkerComments(' + quoteForExtendScript(JSON.stringify(pendingPolishPreview.replacements)) + ')');
+    const result = await evalScript('replaceMarkerComments(' + quoteForExtendScript(JSON.stringify(editedReplacements)) + ')');
     if (!result.ok) throw new Error(result.error);
     for (const message of result.messages || []) log(message, message.indexOf('Skipped') === 0 ? 'error' : 'ok');
     log('Updated ' + result.updatedCount + ' Premiere marker comments. Skipped ' + result.skippedCount + '.', result.skippedCount ? 'error' : 'ok');
@@ -291,7 +298,7 @@ function renderPolishPreview(preview) {
     const copy = document.createElement('div');
     copy.className = 'preview-copy';
     copy.appendChild(previewTextBlock('Original', replacement.originalComment));
-    copy.appendChild(previewTextBlock('Polished', replacement.polishedComment));
+    copy.appendChild(previewEditableTextBlock('Polished', replacement.polishedComment, replacement.index));
     item.appendChild(copy);
     el.polishPreviewList.appendChild(item);
   }
@@ -307,6 +314,41 @@ function previewTextBlock(label, text) {
   block.appendChild(heading);
   block.appendChild(paragraph);
   return block;
+}
+
+function previewEditableTextBlock(label, text, index) {
+  const block = document.createElement('div');
+  const heading = document.createElement('strong');
+  heading.textContent = label;
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.rows = Math.max(3, Math.min(8, String(text || '').split('\n').length + 1));
+  textarea.setAttribute('data-polish-index', String(index));
+  textarea.setAttribute('spellcheck', 'true');
+  block.appendChild(heading);
+  block.appendChild(textarea);
+  return block;
+}
+
+function syncPolishPreviewEdits() {
+  if (!pendingPolishPreview || !pendingPolishPreview.replacements) return [];
+
+  const byIndex = new Map();
+  for (const replacement of pendingPolishPreview.replacements) {
+    byIndex.set(Number(replacement.index), replacement);
+  }
+
+  const fields = el.polishPreviewList.querySelectorAll('textarea[data-polish-index]');
+  for (const field of fields) {
+    const replacement = byIndex.get(Number(field.getAttribute('data-polish-index')));
+    if (replacement) replacement.polishedComment = String(field.value || '').replace(/\r\n/g, '\n');
+  }
+
+  pendingPolishPreview.replacements = pendingPolishPreview.replacements.filter(function (replacement) {
+    const polishedComment = String(replacement.polishedComment || '');
+    return polishedComment !== String(replacement.originalComment || '');
+  });
+  return pendingPolishPreview.replacements;
 }
 
 async function maybePolishMarkerComments(markers) {

@@ -90,6 +90,19 @@ describe('CEP package structure', () => {
     assert.match(main, /el\.cancelPolishPreview\.addEventListener\('click', cancelPolishPreview\)/);
   });
 
+  it('lets users edit polished preview text before applying it to Premiere', () => {
+    const main = read('js/main.js');
+    const styles = read('css/styles.css');
+
+    assert.match(main, /function syncPolishPreviewEdits/);
+    assert.match(main, /querySelectorAll\('textarea\[data-polish-index\]'\)/);
+    assert.match(main, /previewEditableTextBlock\('Polished'/);
+    assert.match(main, /const editedReplacements = syncPolishPreviewEdits\(\)/);
+    assert.match(main, /replacements: editedReplacements/);
+    assert.doesNotMatch(main, /polishedComment\.trim\(\) === ''/);
+    assert.match(styles, /\.preview-copy textarea/);
+  });
+
   it('defaults the output folder to the current Premiere project folder', () => {
     const main = read('js/main.js');
     const host = read('jsx/host.jsx');

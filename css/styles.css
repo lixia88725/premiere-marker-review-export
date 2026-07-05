@@ -38,4 +38,5 @@ textarea { width: 100%; min-height: 86px; resize: vertical; border: 1px solid va
 .preview-copy { display: grid; gap: 8px; }
 .preview-copy strong { display: block; margin-bottom: 3px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
 .preview-copy p { white-space: pre-wrap; word-break: break-word; color: var(--text); }
+.preview-copy textarea { min-height: 74px; resize: vertical; line-height: 1.45; }
 .preview-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
