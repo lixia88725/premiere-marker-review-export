@@ -1,11 +1,16 @@
 {
-  "name": "premiere-marker-review-exporter",
-  "version": "0.1.0",
+  "name": "premiere-marker-review-export",
+  "version": "1.0.0",
   "private": true,
-  "description": "Premiere Pro 2022 CEP panel for exporting marker review reports.",
-  "type": "module",
+  "workspaces": [
+    "cep-2022",
+    "uxp-2026"
+  ],
   "scripts": {
-    "test": "node --test",
-    "check:manifest": "node scripts/check-manifest.mjs"
+    "test": "npm run test:cep && npm run test:uxp",
+    "test:cep": "npm test --workspace cep-2022",
+    "test:uxp": "npm test --workspace uxp-2026",
+    "build": "npm run build --workspace uxp-2026",
+    "typecheck": "npm run typecheck --workspace uxp-2026"
   }
 }
