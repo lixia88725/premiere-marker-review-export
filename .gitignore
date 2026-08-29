@@ -1,6 +1,5 @@
 node_modules/
+uxp-2026/dist/
+uxp-2026/release/
+*.ccx
 .DS_Store
-*.log
-*.zip
-/dist/
-coverage/

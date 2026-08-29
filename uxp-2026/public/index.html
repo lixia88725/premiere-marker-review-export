@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Marker Review Export</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="./index.js"></script>
+</head>
+<body>
+  <main class="panel">
+    <header>
+      <h1>Marker Review Export</h1>
+      <p>Premiere 2026 sequence marker report</p>
+    </header>
+    <section class="status-card">
+      <div class="label">Current sequence</div>
+      <div id="sequenceName" class="value">No active sequence</div>
+      <div id="markerCount" class="subvalue">0 markers</div>
+    </section>
+    <section class="field-group">
+      <div class="label">Output folder</div>
+      <div class="path-row">
+        <sp-textfield id="outputPath" disabled placeholder="Choose an output parent folder"></sp-textfield>
+        <sp-button id="chooseOutput" variant="secondary">Choose</sp-button>
+      </div>
+    </section>
+    <section class="field-group ai-polish">
+      <sp-checkbox id="aiEnabled">AI Polish comments</sp-checkbox>
+      <div class="compact-fields">
+        <sp-textfield id="aiBaseUrl" placeholder="https://api.openai.com/v1">
+          <sp-label slot="label">Base URL</sp-label>
+        </sp-textfield>
+        <sp-textfield id="aiModel" placeholder="gpt-4o-mini">
+          <sp-label slot="label">Model</sp-label>
+        </sp-textfield>
+        <sp-textfield id="aiApiKey" type="password" placeholder="Stored in UXP SecureStorage">
+          <sp-label slot="label">API Key</sp-label>
+        </sp-textfield>
+        <sp-textarea id="aiPrompt">
+          <sp-label slot="label">Prompt</sp-label>
+        </sp-textarea>
+      </div>
+    </section>
+    <section class="actions">
+      <sp-button id="refresh" variant="secondary">Refresh Markers</sp-button>
+      <sp-button id="polishMarkers" variant="secondary">Polish Premiere Markers</sp-button>
+      <sp-button id="export" variant="cta">Export Report</sp-button>
+    </section>
+    <section id="polishPreview" class="preview-section is-hidden">
+      <div class="label">AI Polish Preview</div>
+      <div id="polishPreviewList" class="preview-list"></div>
+      <div class="preview-actions">
+        <sp-button id="cancelPolishPreview" variant="secondary">Cancel</sp-button>
+        <sp-button id="applyPolishPreview" variant="cta">Apply to Premiere Markers</sp-button>
+      </div>
+    </section>
+    <section class="log-section">
+      <div class="label">Progress</div>
+      <ol id="log"></ol>
+    </section>
+  </main>
+</body>
+</html>
